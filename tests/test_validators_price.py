@@ -54,24 +54,24 @@ def test_price_validator_detects_dip():
     assert len(errors) == 1
     assert errors[0].ticker == "MSFT"
     assert errors[0].error_type == "Price Spike"
-    assert errors[0].severity == "Medium"  # ~48% change, so Medium (> 0.3)
+    assert errors[0].severity == "High"  # ~50% change, so High (> 0.3)
 
 
 def test_price_validator_severity_levels():
     dates = [datetime(2023, 1, 1), datetime(2023, 1, 2), datetime(2023, 1, 3)]
 
-    # Low severity: ~25% change
+    # Low severity: ~12% change (Threshold is 10%, Low is <= 15%)
     data_low = {
         "Date": dates,
         "P_Ticker": ["LOW", "LOW", "LOW"],
-        "Price": [100.0, 125.0, 100.0],
+        "Price": [100.0, 112.0, 100.0],
     }
 
-    # Medium severity: ~40% change
+    # Medium severity: ~25% change (Medium is > 15% and <= 30%)
     data_med = {
         "Date": dates,
         "P_Ticker": ["MED", "MED", "MED"],
-        "Price": [100.0, 140.0, 100.0],
+        "Price": [100.0, 125.0, 100.0],
     }
 
     df = pd.concat([pd.DataFrame(data_low), pd.DataFrame(data_med)])

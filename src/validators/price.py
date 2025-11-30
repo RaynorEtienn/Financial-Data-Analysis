@@ -37,27 +37,19 @@ class PriceValidator(BaseValidator):
             group["Days_Diff_Prev"] = group["Days_Diff_Prev"].replace(0, 1).fillna(1)
             group["Days_Diff_Next"] = group["Days_Diff_Next"].replace(0, 1).fillna(1)
 
-            # Calculate deviations
-            # We use the neighbor as the base for percentage calculation
-            # (P_t - P_{t-1}) / P_{t-1}
-            group["Pct_Change_Prev"] = (group["Price"] - group["Prev_Price"]) / group[
-                "Prev_Price"
-            ]
+            # Calculate Geometric Daily Returns (Industrial Grade)
+            # Formula: (Price / Base_Price)^(1/Days) - 1
+            # This accounts for compounding over time gaps.
 
-            # (P_t - P_{t+1}) / P_{t+1}  <-- comparing to next
-            group["Pct_Change_Next"] = (group["Price"] - group["Next_Price"]) / group[
-                "Next_Price"
-            ]
+            # 1. Compare with Previous
+            ratio_prev = group["Price"] / group["Prev_Price"]
+            group["Daily_Change_Prev"] = ratio_prev.pow(1 / group["Days_Diff_Prev"]) - 1
 
-            # Normalize by time (Daily equivalent change)
-            group["Daily_Change_Prev"] = (
-                group["Pct_Change_Prev"] / group["Days_Diff_Prev"]
-            )
-            group["Daily_Change_Next"] = (
-                group["Pct_Change_Next"] / group["Days_Diff_Next"]
-            )
+            # 2. Compare with Next
+            ratio_next = group["Price"] / group["Next_Price"]
+            group["Daily_Change_Next"] = ratio_next.pow(1 / group["Days_Diff_Next"]) - 1
 
-            threshold = 0.20
+            threshold = 0.10
 
             # Check for spikes
             # 1. Significant change from previous (normalized)
@@ -78,9 +70,9 @@ class PriceValidator(BaseValidator):
                 mag_next = abs(row["Daily_Change_Next"])
                 magnitude = (mag_prev + mag_next) / 2
 
-                if magnitude > 0.5:  # > 50% daily change
+                if magnitude > 0.3:  # > 30% daily change
                     severity = "High"
-                elif magnitude > 0.3:  # > 30% daily change
+                elif magnitude > 0.15:  # > 15% daily change
                     severity = "Medium"
                 else:
                     severity = "Low"
