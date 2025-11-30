@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-import os
 from src.data_loader import DataLoader
 
 

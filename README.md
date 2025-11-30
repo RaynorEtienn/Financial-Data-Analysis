@@ -57,6 +57,14 @@ The project follows a modular architecture to ensure scalability and maintainabi
     ```
 3.  Place the input data file in the `data/` directory.
 
+## Testing
+
+To run the unit tests, execute the following command from the project root:
+
+```bash
+python -m pytest
+```
+
 ## Usage
 
 Run the analysis via the Jupyter Notebook in `notebooks/analysis.ipynb` or execute the main script (to be implemented).
