@@ -24,6 +24,7 @@ The project follows a modular architecture to ensure scalability and maintainabi
     - `ReconciliationValidator`: Reconciles positions with trades.
     - `CalculationValidator`: Verifies derived metrics (Market Value, Weights).
     - `ConsistencyValidator`: Checks cross-referencing data (Trade Price vs. Market Price).
+    - `DataCompletenessValidator` (Planned): Checks for missing critical data points (Prices, FX rates) before other validators run.
 3.  **Reporting Layer**: Aggregates findings from all validators and produces a structured report.
 4.  **Presentation**: A Jupyter Notebook demonstrating the usage of the library and highlighting the findings.
 
