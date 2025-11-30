@@ -4,10 +4,35 @@ from typing import List
 
 class PriceValidator(BaseValidator):
     """
-    Checks for inconsistent prices (jumping day to day).
+    Validator for detecting price anomalies in the portfolio data.
+
+    This validator implements a "Spike Detection" algorithm to identify isolated price errors
+    while ignoring sustained market movements. It uses Geometric Daily Returns (Compound Daily Growth Rate)
+    to normalize price changes across varying time gaps, ensuring that a 50% jump over a month
+    is treated differently than a 50% jump in a single day.
+
+    Logic:
+    1.  **Neighbor Comparison**: Checks the price against both the previous and next available records.
+    2.  **Time Normalization**: Calculates the 'Implied Daily Return' for the gap between records.
+        Formula: (Price_t / Price_{t-1})^(1 / Days_Diff) - 1
+    3.  **Spike Detection**: Flags a record if:
+        -   The implied daily change from the *previous* record exceeds the threshold (10%).
+        -   The implied daily change to the *next* record exceeds the threshold (10%).
+        -   The direction of change is consistent (e.g., a sharp rise followed by a sharp fall).
+
+    Severity Levels (based on average implied daily change):
+    -   **Low**: > 10% and <= 15%
+    -   **Medium**: > 15% and <= 30%
+    -   **High**: > 30%
     """
 
     def validate(self) -> List[ValidationError]:
+        """
+        Executes the price validation logic.
+
+        Returns:
+            List[ValidationError]: A list of detected price spikes.
+        """
         # Ensure we have necessary columns
         if (
             "P_Ticker" not in self.positions_df.columns
