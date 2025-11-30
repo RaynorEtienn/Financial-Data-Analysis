@@ -20,11 +20,11 @@ The project follows a modular architecture to ensure scalability and maintainabi
 
 1.  **Data Ingestion Layer**: Responsible for loading raw data (Excel/CSV) and standardizing it into a usable format (e.g., Pandas DataFrame).
 2.  **Validation Engine**: A collection of specialized validators, each responsible for a specific type of error check.
-    - `PriceValidator`: Checks for unrealistic price movements.
-    - `ReconciliationValidator`: Reconciles positions with trades.
-    - `CalculationValidator`: Verifies derived metrics (Market Value, Weights).
-    - `ConsistencyValidator`: Checks cross-referencing data (Trade Price vs. Market Price).
-    - `DataCompletenessValidator` (Planned): Checks for missing critical data points (Prices, FX rates) before other validators run.
+    - <input type="checkbox" checked> `PriceValidator`: Checks for unrealistic price movements.
+    - <input type="checkbox" checked> `ReconciliationValidator`: Reconciles positions with trades.
+    - <input type="checkbox" checked> `CalculationValidator`: Verifies derived metrics (Market Value, Weights).
+    - <input type="checkbox" checked> `ConsistencyValidator`: Checks cross-referencing data (Trade Price vs. Market Price).
+    - <input type="checkbox" checked> `DataCompletenessValidator` (Planned): Checks for missing critical data points (Prices, FX rates) before other validators run.
 3.  **Reporting Layer**: Aggregates findings from all validators and produces a structured report.
 4.  **Presentation**: A Jupyter Notebook demonstrating the usage of the library and highlighting the findings.
 
