@@ -58,31 +58,56 @@ def test_price_validator_detects_dip():
 
 
 def test_price_validator_severity_levels():
-    dates = [datetime(2023, 1, 1), datetime(2023, 1, 2), datetime(2023, 1, 3)]
+    # We need enough data points to establish a low standard deviation
+    # so that small jumps are considered statistical outliers (Z > 3).
+    dates = [datetime(2023, 1, i) for i in range(1, 21)]  # 20 days
 
-    # Low severity: ~12% change (Threshold is 10%, Low is <= 15%)
+    # Low severity: 6% change.
+    # Z > 3 (outlier), but Magnitude (6%) < 10%. -> Low
+    prices_low = [100.0] * 20
+    prices_low[10] = 106.0
+
     data_low = {
         "Date": dates,
-        "P_Ticker": ["LOW", "LOW", "LOW"],
-        "Price": [100.0, 112.0, 100.0],
+        "P_Ticker": ["LOW"] * 20,
+        "Price": prices_low,
     }
 
-    # Medium severity: ~25% change (Medium is > 15% and <= 30%)
+    # Medium severity: 12% change.
+    # Z > 3 (outlier), Magnitude (12%) > 10%. -> Medium
+    prices_med = [100.0] * 20
+    prices_med[10] = 112.0
+
     data_med = {
         "Date": dates,
-        "P_Ticker": ["MED", "MED", "MED"],
-        "Price": [100.0, 125.0, 100.0],
+        "P_Ticker": ["MED"] * 20,
+        "Price": prices_med,
     }
 
-    df = pd.concat([pd.DataFrame(data_low), pd.DataFrame(data_med)])
+    # High severity: 35% change.
+    # Magnitude > 30%. -> High
+    prices_high = [100.0] * 20
+    prices_high[10] = 135.0
+
+    data_high = {
+        "Date": dates,
+        "P_Ticker": ["HIGH"] * 20,
+        "Price": prices_high,
+    }
+
+    df = pd.concat(
+        [pd.DataFrame(data_low), pd.DataFrame(data_med), pd.DataFrame(data_high)]
+    )
     validator = PriceValidator(df, pd.DataFrame())
     errors = validator.validate()
 
     low_error = next(e for e in errors if e.ticker == "LOW")
     med_error = next(e for e in errors if e.ticker == "MED")
+    high_error = next(e for e in errors if e.ticker == "HIGH")
 
     assert low_error.severity == "Low"
     assert med_error.severity == "Medium"
+    assert high_error.severity == "High"
 
 
 def test_price_validator_ignores_sparse_data_jump():

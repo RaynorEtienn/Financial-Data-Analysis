@@ -25,7 +25,7 @@ def test_calculation_validator_detects_error():
         "Close Quantity": [10],
         "Price": [150.0],
         "Exchange Rate": [1.0],
-        "Value in USD": [2000.0],  # Should be 1500, Diff is 500. Pct = 500/2000 = 25%
+        "Value in USD": [1800.0],  # Should be 1500, Diff is 300. Pct = 300/1500 = 20%
     }
     df = pd.DataFrame(data)
     validator = CalculationValidator(df, pd.DataFrame())
@@ -35,7 +35,7 @@ def test_calculation_validator_detects_error():
     assert errors[0].ticker == "AAPL"
     assert errors[0].error_type == "Calculation Error"
     assert "Value Mismatch" in errors[0].description
-    assert errors[0].severity == "Medium"  # 25% is Medium (15-30%)
+    assert errors[0].severity == "Medium"  # 20% is Medium (15-30%)
 
 
 def test_calculation_validator_severity_levels():
@@ -201,3 +201,37 @@ def test_calculation_validator_systematic_multiplier():
         "Systematic Multiplier" in err.description
         or "missing multiplier" in err.description
     )
+
+
+def test_calculation_validator_systematic_shift():
+    """
+    Ensure that if a ticker consistently has the same additive shift error, it is detected as systematic.
+    """
+    # Create 5 days of data for the same ticker, all off by +500
+    # We vary the Quantity so that Theoretical Value varies.
+    # This ensures it's detected as a Shift (+500) and NOT a Multiplier (which would vary).
+    dates = [datetime(2023, 1, i + 1) for i in range(5)]
+    quantities = [100, 200, 300, 400, 500]
+    theoreticals = [q * 10.0 * 1.0 for q in quantities]
+    reporteds = [t + 500.0 for t in theoreticals]
+
+    data = {
+        "Date": dates,
+        "P_Ticker": ["SHIFT_ERR"] * 5,
+        "Close Quantity": quantities,
+        "Price": [10.0] * 5,
+        "Exchange Rate": [1.0] * 5,
+        "Value in USD": reporteds,
+    }
+    df = pd.DataFrame(data)
+    validator = CalculationValidator(df, pd.DataFrame())
+    errors = validator.validate()
+
+    assert len(errors) == 5
+    # Check the first one
+    err = errors[0]
+    assert err.ticker == "SHIFT_ERR"
+    # Should be downgraded to Low because it's systematic/explained
+    assert err.severity == "Low"
+    assert "Systematic Shift" in err.description
+    assert "+500.00" in err.description

@@ -75,3 +75,25 @@ class BaseValidator(ABC):
                 severity=severity,
             )
         )
+
+    def calculate_z_scores(self, series: pd.Series) -> pd.Series:
+        """
+        Calculates the Z-score for each element in a numeric series.
+        Z = (X - Mean) / StdDev
+
+        Args:
+            series (pd.Series): A pandas Series of numeric values.
+
+        Returns:
+            pd.Series: A Series of Z-scores. Returns NaN if StdDev is 0.
+        """
+        if series.empty:
+            return series
+
+        mean = series.mean()
+        std = series.std()
+
+        if std == 0:
+            return pd.Series(0, index=series.index)
+
+        return (series - mean) / std

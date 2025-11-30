@@ -8,22 +8,22 @@ class PriceValidator(BaseValidator):
 
     This validator implements a "Spike Detection" algorithm to identify isolated price errors
     while ignoring sustained market movements. It uses Geometric Daily Returns (Compound Daily Growth Rate)
-    to normalize price changes across varying time gaps, ensuring that a 50% jump over a month
-    is treated differently than a 50% jump in a single day.
+    to normalize price changes across varying time gaps.
 
-    Logic:
-    1.  **Neighbor Comparison**: Checks the price against both the previous and next available records.
-    2.  **Time Normalization**: Calculates the 'Implied Daily Return' for the gap between records.
+    Methodology:
+    1.  **Time Normalization**: Calculates 'Implied Daily Return' to handle irregular time gaps.
         Formula: (Price_t / Price_{t-1})^(1 / Days_Diff) - 1
-    3.  **Spike Detection**: Flags a record if:
-        -   The implied daily change from the *previous* record exceeds the threshold (10%).
-        -   The implied daily change to the *next* record exceeds the threshold (10%).
-        -   The direction of change is consistent (e.g., a sharp rise followed by a sharp fall).
+    2.  **Statistical Analysis**: Calculates Z-Scores for these daily returns per ticker.
+    3.  **Hybrid Spike Detection**: Flags a record if:
+        -   It represents a significant change from BOTH the previous and next record.
+        -   The direction is consistent (e.g., Up-then-Down or Down-then-Up).
+        -   The change is a statistical outlier (Z > 3) OR a massive absolute change (> 20%).
+        -   The change exceeds a minimum floor (5%) to filter noise.
 
-    Severity Levels (based on average implied daily change):
-    -   **Low**: > 10% and <= 15%
-    -   **Medium**: > 15% and <= 30%
-    -   **High**: > 30%
+    Severity Levels:
+    -   **High**: Extreme outlier (Z > 5) OR Extreme magnitude (> 30%).
+    -   **Medium**: Significant outlier (Z > 3) OR Significant magnitude (> 15%).
+    -   **Low**: Minor outlier.
     """
 
     def validate(self) -> List[ValidationError]:
@@ -74,39 +74,74 @@ class PriceValidator(BaseValidator):
             ratio_next = group["Price"] / group["Next_Price"]
             group["Daily_Change_Next"] = ratio_next.pow(1 / group["Days_Diff_Next"]) - 1
 
-            threshold = 0.10
+            # Calculate Z-Scores for the daily changes
+            # This adapts to the volatility of the specific ticker
+            group["Z_Score_Prev"] = self.calculate_z_scores(group["Daily_Change_Prev"])
+            group["Z_Score_Next"] = self.calculate_z_scores(group["Daily_Change_Next"])
 
-            # Check for spikes
-            # 1. Significant change from previous (normalized)
-            cond1 = group["Daily_Change_Prev"].abs() > threshold
-            # 2. Significant change from next (normalized)
-            cond2 = group["Daily_Change_Next"].abs() > threshold
-            # 3. Direction consistency (Peak or Valley)
-            # (Price - Prev) and (Price - Next) should have same sign
-            # Which is equivalent to Pct_Change_Prev and Pct_Change_Next having same sign
-            # (since Prices are positive)
+            # Hybrid Approach for Spike Detection
+            # We flag a spike if:
+            # 1. The change is a statistical outlier (Z > 3) OR a massive absolute change (> 20%)
+            # 2. The change exceeds a minimum floor (5%) to avoid noise in stable assets
+            # 3. This happens on BOTH sides (Prev and Next)
+            # 4. The direction is consistent (Up-Down or Down-Up)
+
+            floor = 0.05
+
+            # Condition 1: Significant change from previous
+            is_outlier_prev = group["Z_Score_Prev"].abs() > 3
+            is_large_prev = group["Daily_Change_Prev"].abs() > 0.20
+            above_floor_prev = group["Daily_Change_Prev"].abs() > floor
+            cond1 = (is_outlier_prev & above_floor_prev) | is_large_prev
+
+            # Condition 2: Significant change from next
+            is_outlier_next = group["Z_Score_Next"].abs() > 3
+            is_large_next = group["Daily_Change_Next"].abs() > 0.20
+            above_floor_next = group["Daily_Change_Next"].abs() > floor
+            cond2 = (is_outlier_next & above_floor_next) | is_large_next
+
+            # Condition 3: Direction consistency (Peak or Valley)
             cond3 = (group["Daily_Change_Prev"] * group["Daily_Change_Next"]) > 0
 
             outliers = group[cond1 & cond2 & cond3]
 
             for _, row in outliers.iterrows():
-                # Determine severity based on the magnitude of the spike (average daily change)
+                # Determine severity based on Z-Score and Magnitude
                 mag_prev = abs(row["Daily_Change_Prev"])
                 mag_next = abs(row["Daily_Change_Next"])
                 magnitude = (mag_prev + mag_next) / 2
 
-                if magnitude > 0.3:  # > 30% daily change
+                z_prev = abs(row["Z_Score_Prev"])
+                z_next = abs(row["Z_Score_Next"])
+                z_score = (z_prev + z_next) / 2
+
+                # High: Extreme outlier (> 5 sigma) OR Extreme magnitude (> 30%)
+                if (z_score > 5 and magnitude > 0.10) or magnitude > 0.30:
                     severity = "High"
-                elif magnitude > 0.15:  # > 15% daily change
+                # Medium: Significant outlier (> 3 sigma) OR Significant magnitude (> 15%)
+                elif (z_score > 3 and magnitude > 0.10) or magnitude > 0.15:
                     severity = "Medium"
+                # Low: Minor outlier
                 else:
                     severity = "Low"
+
+                # Construct detailed description
+                reason = []
+                if magnitude > 0.20:
+                    reason.append(f"Absolute Change > 20% ({magnitude:.1%})")
+
+                if z_score > 5:
+                    reason.append(f"Extreme Statistical Outlier (Z={z_score:.1f} > 5)")
+                elif z_score > 3:
+                    reason.append(f"Statistical Outlier (Z={z_score:.1f} > 3)")
+
+                reason_str = " | ".join(reason)
 
                 self.add_error(
                     date=row["Date"],
                     ticker=ticker,
                     error_type="Price Spike",
-                    description=f"Price spike detected: {row['Price']} (Prev: {row['Prev_Price']}, Next: {row['Next_Price']})",
+                    description=f"Price spike detected: {row['Price']} (Prev: {row['Prev_Price']}, Next: {row['Next_Price']}). Flagged due to: {reason_str}",
                     severity=severity,
                 )
 
