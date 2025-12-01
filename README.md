@@ -24,10 +24,10 @@ The project follows a modular architecture to ensure scalability and maintainabi
     - <input type="checkbox" checked> `ReconciliationValidator`: Reconciles positions with trades.
     - <input type="checkbox" checked> `CalculationValidator`: Verifies derived metrics (Market Value, Weights).
     - <input type="checkbox" checked> `ConsistencyValidator`: Checks cross-referencing data (Trade Price vs. Market Price).
-    - <input type="checkbox" unchecked> `DataCompletenessValidator` (Planned): Checks for missing critical data points (Prices, FX rates).
-    - <input type="checkbox" unchecked> `FXConsistencyValidator` (Planned): Checks for inconsistent exchange rates across assets.
-    - <input type="checkbox" unchecked> `WeightValidator` (Planned): Verifies portfolio weight calculations.
-    - <input type="checkbox" unchecked> `StaticDataValidator` (Planned): Checks for consistency in static data (Sector, Currency) over time.
+    - <input type="checkbox" checked> `DataCompletenessValidator`: Checks for missing critical data points (Prices, FX rates).
+    - <input type="checkbox" checked> `FXConsistencyValidator`: Checks for inconsistent exchange rates across assets.
+    - <input type="checkbox" checked> `WeightValidator`: Verifies portfolio weight calculations.
+    - <input type="checkbox" checked> `StaticDataValidator`: Checks for consistency in static data (Sector, Currency) over time.
 3.  **Reporting Layer**: Aggregates findings from all validators and produces a structured report.
 4.  **Presentation**: A Jupyter Notebook demonstrating the usage of the library and highlighting the findings.
 
