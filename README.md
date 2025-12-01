@@ -1,5 +1,19 @@
 # ARR Investment Partners - Portfolio Error Detection
 
+**Repository Link**: [https://github.com/RaynorEtienn/ARR_Application](https://github.com/RaynorEtienn/ARR_Application)
+
+## Introduction for Reviewers
+
+Welcome! This repository contains my solution for the Portfolio Error Detection task. I have taken on the role of a "detective" to uncover inconsistencies and errors in the provided portfolio dataset.
+
+**Where to start:**
+
+- **Main Analysis**: The primary entry point is **[`notebooks/analysis.ipynb`](notebooks/analysis.ipynb)**. This notebook demonstrates the execution of the validation engine, visualizes the identified errors (price spikes, reconciliation breaks, etc.), and provides a summary of the findings.
+- **Architecture**: The solution is designed as a modular Python library located in `src/`. Each class of error is handled by a dedicated validator in `src/validators/`, ensuring the code is scalable and easily extensible for new types of checks.
+- **Quality Assurance**: Comprehensive unit tests are provided in `tests/` to verify the logic of each validator.
+
+---
+
 ## Project Overview
 
 This project is designed to analyze a hypothetical portfolio dataset to identify data integrity issues, inconsistencies, and calculation errors. It serves as a technical assessment for the Quantitative Developer role at ARR Investment Partners.
