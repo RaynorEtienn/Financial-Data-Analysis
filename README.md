@@ -26,7 +26,6 @@ The project follows a modular architecture to ensure scalability and maintainabi
     - <input type="checkbox" checked> `ConsistencyValidator`: Checks cross-referencing data (Trade Price vs. Market Price).
     - <input type="checkbox" checked> `DataCompletenessValidator`: Checks for missing critical data points (Prices, FX rates).
     - <input type="checkbox" checked> `FXConsistencyValidator`: Checks for inconsistent exchange rates across assets.
-    - <input type="checkbox" checked> `WeightValidator`: Verifies portfolio weight calculations.
     - <input type="checkbox" checked> `StaticDataValidator`: Checks for consistency in static data (Sector, Currency) over time.
 3.  **Reporting Layer**: Aggregates findings from all validators and produces a structured report.
 4.  **Presentation**: A Jupyter Notebook demonstrating the usage of the library and highlighting the findings.
