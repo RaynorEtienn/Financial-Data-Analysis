@@ -35,7 +35,7 @@ def test_data_completeness_validator_missing_price():
     assert errors[0].ticker == "AAPL"
     assert errors[0].error_type == "Missing Data"
     assert "Price" in errors[0].description
-    assert errors[0].severity == "High"
+    assert errors[0].severity == "Medium"
 
 
 def test_data_completeness_validator_zero_price():
@@ -55,7 +55,7 @@ def test_data_completeness_validator_zero_price():
     assert errors[0].ticker == "AAPL"
     assert errors[0].error_type == "Invalid Data"
     assert "Price" in errors[0].description
-    assert errors[0].severity == "High"
+    assert errors[0].severity == "Medium"
 
 
 def test_data_completeness_validator_missing_currency():

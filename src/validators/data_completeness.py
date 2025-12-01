@@ -18,8 +18,7 @@ class DataCompletenessValidator(BaseValidator):
     3.  **Static Data Check**: Ensures essential metadata (e.g., Currency) is present.
 
     Severity Levels:
-    -   **High**: Missing Price, Exchange Rate, Ticker, or Date.
-    -   **Medium**: Missing Currency or other important metadata.
+    -   **Medium**: Missing Price, Exchange Rate, Ticker, Date, Currency or other important metadata.
     -   **Low**: Missing non-critical descriptive fields.
     """
 
@@ -34,12 +33,13 @@ class DataCompletenessValidator(BaseValidator):
 
         # 1. Define Critical Columns and their rules
         # (Column Name, Can be 0?, Severity if Missing)
+        # User requested to downgrade missing values to Medium to avoid overshadowing other errors
         critical_checks = [
-            ("P_Ticker", False, "High"),
-            ("Date", False, "High"),
-            ("Price", False, "High"),
-            ("Exchange Rate", False, "High"),
-            ("Close Quantity", True, "High"),  # Quantity can be 0, but not NaN
+            ("P_Ticker", False, "Medium"),
+            ("Date", False, "Medium"),
+            ("Price", False, "Medium"),
+            ("Exchange Rate", False, "Medium"),
+            ("Close Quantity", True, "Medium"),  # Quantity can be 0, but not NaN
             ("Currency", True, "Medium"),  # Currency string can't be 0, but check NaN
         ]
 
