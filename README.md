@@ -1,6 +1,6 @@
 # ARR Investment Partners - Portfolio Error Detection
 
-**Repository Link**: [https://github.com/RaynorEtienn/ARR_Application](https://github.com/RaynorEtienn/ARR_Application)
+**Repository Link**: [https://github.com/RaynorEtienn/Financial-Data-Analysis](https://github.com/RaynorEtienn/Financial-Data-Analysis)
 
 ## Introduction for Reviewers
 
